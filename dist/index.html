@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Horse Barn Adventure</title>
+    <style>
+      :root {
+        --ink: #10243f;
+        --paper: #f7f2df;
+        --sun: #fef3c7;
+        --sky-top: #9fd4ff;
+        --sky-bottom: #f7fbff;
+        --field: #5ea742;
+        --field-dark: #3f7d2d;
+        --barn: #d62f2f;
+        --barn-dark: #8b1a1a;
+        --white: #ffffff;
+        --panel: #fff8e8;
+        --chip-outline: #22324a;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+
+      body {
+        font-family:
+          "Avenir Next",
+          "Trebuchet MS",
+          "Gill Sans MT",
+          sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 10% 12%, rgba(255, 252, 221, 0.9), transparent 34%),
+          radial-gradient(circle at 90% 88%, rgba(215, 241, 255, 0.75), transparent 36%),
+          linear-gradient(180deg, #ccedff 0%, #eef8ff 48%, #d6efc9 100%);
+      }
+
+      .app {
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(10px, 2vw, 20px);
+      }
+
+      .shell {
+        width: min(1100px, 100%);
+        min-height: min(860px, 100%);
+        border: 3px solid rgba(16, 36, 63, 0.2);
+        border-radius: 26px;
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(2px);
+        box-shadow: 0 20px 40px rgba(16, 36, 63, 0.18);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .scene {
+        display: none;
+        opacity: 0;
+        animation: fade-in 260ms ease forwards;
+      }
+
+      .scene.active {
+        display: block;
+      }
+
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .title {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.06;
+        letter-spacing: 0.01em;
+      }
+
+      .subtitle {
+        margin: 6px 0 0;
+        font-size: clamp(16px, 1.8vw, 20px);
+        color: rgba(16, 36, 63, 0.86);
+      }
+
+      .color-scene {
+        padding: clamp(14px, 2.2vw, 24px);
+      }
+
+      .color-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+
+      .coloring-layout {
+        display: grid;
+        grid-template-columns: minmax(300px, 1fr) minmax(280px, 360px);
+        gap: clamp(14px, 2vw, 20px);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 2px solid rgba(16, 36, 63, 0.2);
+        border-radius: 20px;
+        padding: clamp(10px, 1.6vw, 18px);
+      }
+
+      .canvas-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .horse-coloring {
+        width: min(100%, 700px);
+        height: auto;
+        display: block;
+        touch-action: none;
+      }
+
+      .horse-coloring .color-part {
+        fill: var(--white);
+        stroke: #111827;
+        stroke-width: 7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        cursor: pointer;
+        transition: transform 120ms ease;
+      }
+
+      .horse-coloring .color-part:active {
+        transform: scale(0.99);
+      }
+
+      .horse-outline {
+        fill: none;
+        stroke: #111827;
+        stroke-width: 7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        pointer-events: none;
+      }
+
+      .toolbar {
+        display: grid;
+        gap: 12px;
+      }
+
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .color-chip {
+        border: 3px solid var(--chip-outline);
+        height: clamp(54px, 7vw, 64px);
+        border-radius: 16px;
+        cursor: pointer;
+        transition: transform 120ms ease;
+      }
+
+      .color-chip.active {
+        transform: scale(1.06);
+        box-shadow: 0 0 0 4px #ffffff, 0 0 0 8px rgba(16, 36, 63, 0.25);
+      }
+
+      .color-chip:active {
+        transform: scale(1.02);
+      }
+
+      .actions {
+        display: grid;
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      .btn {
+        border: none;
+        border-radius: 14px;
+        min-height: 54px;
+        padding: 10px 16px;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        transition: transform 120ms ease;
+      }
+
+      .btn:active {
+        transform: translateY(1px) scale(0.99);
+      }
+
+      .btn-primary {
+        color: #fff;
+        background: linear-gradient(180deg, #1c6ee6 0%, #1452af 100%);
+      }
+
+      .btn-secondary {
+        color: var(--ink);
+        background: #fff;
+        border: 2px solid rgba(16, 36, 63, 0.25);
+      }
+
+      .small-help {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.4;
+        color: rgba(16, 36, 63, 0.82);
+      }
+
+      .game-scene {
+        padding: clamp(12px, 1.9vw, 20px);
+      }
+
+      .game-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .preview-chip {
+        background: #fff;
+        border: 2px solid rgba(16, 36, 63, 0.22);
+        border-radius: 16px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+      }
+
+      .preview-chip img {
+        width: 46px;
+        height: 46px;
+        object-fit: contain;
+      }
+
+      .game-area {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        border-radius: 22px;
+        border: 2px solid rgba(16, 36, 63, 0.25);
+        position: relative;
+        overflow: hidden;
+        touch-action: none;
+        background:
+          radial-gradient(circle at 70% 16%, rgba(255, 245, 180, 0.65), transparent 30%),
+          linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 58%, var(--field) 58%, var(--field-dark) 100%);
+      }
+
+      .cloud {
+        position: absolute;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.88);
+        filter: blur(0.4px);
+      }
+
+      .cloud.one {
+        width: 190px;
+        height: 64px;
+        top: 10%;
+        left: 10%;
+      }
+
+      .cloud.two {
+        width: 140px;
+        height: 48px;
+        top: 18%;
+        left: 30%;
+      }
+
+      .cloud.three {
+        width: 160px;
+        height: 56px;
+        top: 14%;
+        right: 18%;
+      }
+
+      .barn {
+        position: absolute;
+        right: clamp(10px, 2vw, 24px);
+        bottom: 22%;
+        width: min(24vw, 220px);
+        min-width: 156px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .barn-roof {
+        width: 0;
+        height: 0;
+        border-left: calc(min(24vw, 220px) / 2) solid transparent;
+        border-right: calc(min(24vw, 220px) / 2) solid transparent;
+        border-bottom: 56px solid var(--barn-dark);
+      }
+
+      .barn-body {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background: linear-gradient(180deg, #e43e3e 0%, var(--barn) 100%);
+        border: 4px solid var(--barn-dark);
+        border-radius: 6px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        padding-bottom: 10px;
+      }
+
+      .barn-door {
+        width: 42%;
+        height: 60%;
+        border-radius: 4px 4px 2px 2px;
+        background: #2c1010;
+        border: 3px solid #ffe6bf;
+      }
+
+      .barn-body::before,
+      .barn-body::after {
+        content: "";
+        position: absolute;
+        top: 16px;
+        bottom: 16px;
+        left: 18px;
+        right: 18px;
+        border-top: 3px solid rgba(255, 236, 185, 0.75);
+      }
+
+      .barn-body::before {
+        transform: rotate(36deg);
+      }
+
+      .barn-body::after {
+        transform: rotate(-36deg);
+      }
+
+      .game-tip {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(16, 36, 63, 0.74);
+        color: #fff;
+        border-radius: 999px;
+        padding: 8px 16px;
+        font-weight: 700;
+        font-size: clamp(12px, 1.6vw, 16px);
+        letter-spacing: 0.01em;
+      }
+
+      .horse {
+        position: absolute;
+        width: 112px;
+        height: 112px;
+        transform-origin: center;
+        cursor: grab;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .horse.dragging {
+        cursor: grabbing;
+        transform: scale(1.03);
+      }
+
+      .horse-frame {
+        width: 100%;
+        height: 100%;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.86);
+        border: 2px solid rgba(16, 36, 63, 0.38);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .horse-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        pointer-events: none;
+      }
+
+      .horse-tag {
+        margin-top: 5px;
+        font-size: 11px;
+        font-weight: 800;
+        color: #0e2443;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+      }
+
+      .win-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(10, 19, 34, 0.62);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+
+      .win-overlay.active {
+        display: flex;
+      }
+
+      .win-card {
+        width: min(380px, 94%);
+        background: #fff;
+        border-radius: 18px;
+        padding: 20px;
+        text-align: center;
+        border: 2px solid rgba(16, 36, 63, 0.2);
+        box-shadow: 0 18px 36px rgba(16, 36, 63, 0.24);
+      }
+
+      .win-card h2 {
+        margin: 0;
+        font-size: clamp(22px, 3.8vw, 32px);
+      }
+
+      .win-card p {
+        margin: 8px 0 16px;
+        color: rgba(16, 36, 63, 0.82);
+      }
+
+      .win-actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      @media (max-width: 900px) {
+        .shell {
+          min-height: 100%;
+          border-radius: 0;
+          border-left: none;
+          border-right: none;
+        }
+
+        .coloring-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .game-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <div class="shell">
+        <section class="scene color-scene active" id="color-scene">
+          <header class="color-header">
+            <div>
+              <h1 class="title">Color Your Horse</h1>
+              <p class="subtitle">
+                Tap a color, then tap horse parts to paint. Press Submit when ready.
+              </p>
+            </div>
+          </header>
+
+          <div class="coloring-layout">
+            <div class="card canvas-card">
+              <svg
+                id="horse-coloring"
+                class="horse-coloring"
+                viewBox="0 0 920 620"
+                aria-label="Horse coloring page"
+                role="img"
+              >
+                <rect x="0" y="0" width="920" height="620" fill="#fffdf6"></rect>
+
+                <ellipse class="color-part" data-part="body" cx="380" cy="340" rx="220" ry="126"></ellipse>
+                <path
+                  class="color-part"
+                  data-part="neck"
+                  d="M520 240 C560 220, 610 230, 646 262 L582 344 L492 336 Z"
+                ></path>
+                <ellipse class="color-part" data-part="head" cx="696" cy="250" rx="108" ry="78"></ellipse>
+                <ellipse class="color-part" data-part="muzzle" cx="764" cy="278" rx="52" ry="38"></ellipse>
+                <path
+                  class="color-part"
+                  data-part="ear-left"
+                  d="M640 182 L664 132 L682 192 Z"
+                ></path>
+                <path
+                  class="color-part"
+                  data-part="ear-right"
+                  d="M698 178 L738 126 L742 198 Z"
+                ></path>
+                <path
+                  class="color-part"
+                  data-part="mane"
+                  d="M490 236 C520 170, 640 152, 678 206 C642 210, 612 226, 596 246 C578 268, 558 312, 544 356 C512 332, 492 300, 478 266 Z"
+                ></path>
+                <path
+                  class="color-part"
+                  data-part="tail"
+                  d="M170 302 C120 286, 90 330, 120 372 C140 398, 126 452, 174 472 C208 486, 254 442, 236 394 C220 352, 224 318, 214 300 Z"
+                ></path>
+
+                <rect class="color-part" data-part="front-leg-1" x="498" y="414" width="62" height="168" rx="24"></rect>
+                <rect class="color-part" data-part="front-leg-2" x="590" y="410" width="62" height="172" rx="24"></rect>
+                <rect class="color-part" data-part="back-leg-1" x="268" y="414" width="62" height="168" rx="24"></rect>
+                <rect class="color-part" data-part="back-leg-2" x="358" y="412" width="62" height="170" rx="24"></rect>
+
+                <rect class="color-part" data-part="hoof-1" x="496" y="554" width="66" height="30" rx="10"></rect>
+                <rect class="color-part" data-part="hoof-2" x="588" y="554" width="66" height="30" rx="10"></rect>
+                <rect class="color-part" data-part="hoof-3" x="266" y="554" width="66" height="30" rx="10"></rect>
+                <rect class="color-part" data-part="hoof-4" x="356" y="554" width="66" height="30" rx="10"></rect>
+
+                <circle class="horse-outline" cx="722" cy="248" r="8"></circle>
+                <path class="horse-outline" d="M768 285 C788 287, 792 304, 776 314"></path>
+              </svg>
+            </div>
+
+            <aside class="card toolbar">
+              <h2 style="margin: 0; font-size: 24px">Colors</h2>
+              <div class="swatches" id="swatches">
+                <button class="color-chip active" data-color="#b45309" style="background:#b45309" aria-label="Brown"></button>
+                <button class="color-chip" data-color="#f97316" style="background:#f97316" aria-label="Orange"></button>
+                <button class="color-chip" data-color="#fde68a" style="background:#fde68a" aria-label="Golden"></button>
+                <button class="color-chip" data-color="#ef4444" style="background:#ef4444" aria-label="Red"></button>
+                <button class="color-chip" data-color="#34d399" style="background:#34d399" aria-label="Mint"></button>
+                <button class="color-chip" data-color="#38bdf8" style="background:#38bdf8" aria-label="Blue"></button>
+                <button class="color-chip" data-color="#8b5cf6" style="background:#8b5cf6" aria-label="Violet"></button>
+                <button class="color-chip" data-color="#f472b6" style="background:#f472b6" aria-label="Pink"></button>
+                <button class="color-chip" data-color="#111827" style="background:#111827" aria-label="Black"></button>
+              </div>
+
+              <div class="actions">
+                <button class="btn btn-secondary" id="clear-colors">Clear Colors</button>
+                <button class="btn btn-primary" id="submit-colors">Submit Horse</button>
+              </div>
+
+              <p class="small-help">
+                Your painted horse becomes the custom horse used in the game.
+              </p>
+            </aside>
+          </div>
+        </section>
+
+        <section class="scene game-scene" id="game-scene">
+          <header class="game-header">
+            <div>
+              <h1 class="title" style="font-size: clamp(24px, 3.2vw, 36px)">
+                Herd The Horses
+              </h1>
+              <p class="subtitle" style="margin-top: 4px">
+                Drag every runaway horse into the big red barn.
+              </p>
+            </div>
+            <div class="preview-chip">
+              <img id="preview-horse" alt="Custom horse preview" />
+              <span>Your custom horse</span>
+            </div>
+          </header>
+
+          <div class="game-area" id="game-area">
+            <div class="cloud one"></div>
+            <div class="cloud two"></div>
+            <div class="cloud three"></div>
+
+            <div class="game-tip">Drag each horse into the barn</div>
+
+            <div class="barn" id="barn">
+              <div class="barn-roof"></div>
+              <div class="barn-body">
+                <div class="barn-door"></div>
+              </div>
+            </div>
+
+            <div class="win-overlay" id="win-overlay">
+              <div class="win-card">
+                <h2>Great Job</h2>
+                <p>All horses are back in the barn.</p>
+                <div class="win-actions">
+                  <button class="btn btn-primary" id="play-again">Play Again</button>
+                  <button class="btn btn-secondary" id="customize-again">
+                    Customize Horse Again
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const HORSE_COUNT = 5;
+      const HORSE_SIZE = 112;
+
+      const colorScene = document.getElementById("color-scene");
+      const gameScene = document.getElementById("game-scene");
+      const horseColoring = document.getElementById("horse-coloring");
+      const colorParts = Array.from(horseColoring.querySelectorAll(".color-part"));
+      const colorButtons = Array.from(document.querySelectorAll(".color-chip"));
+      const clearColorsButton = document.getElementById("clear-colors");
+      const submitColorsButton = document.getElementById("submit-colors");
+
+      const gameArea = document.getElementById("game-area");
+      const barn = document.getElementById("barn");
+      const previewHorse = document.getElementById("preview-horse");
+      const winOverlay = document.getElementById("win-overlay");
+      const playAgainButton = document.getElementById("play-again");
+      const customizeAgainButton = document.getElementById("customize-again");
+
+      let activeColor = colorButtons[0].dataset.color;
+      let customHorseSrc = "";
+
+      let horses = [];
+      let dragHorseId = null;
+      let dragPointerId = null;
+      let dragOffset = { x: 0, y: 0 };
+      let loopHandle = null;
+      let lastFrameTime = 0;
+
+      const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+      const randomVelocity = () => {
+        const speed = 0.8 + Math.random() * 1.2;
+        return Math.random() > 0.5 ? speed : -speed;
+      };
+
+      const setScene = (scene) => {
+        colorScene.classList.toggle("active", scene === "color");
+        gameScene.classList.toggle("active", scene === "game");
+      };
+
+      const resetColoring = () => {
+        colorParts.forEach((part) => {
+          part.style.fill = "#ffffff";
+        });
+      };
+
+      const updateSelectedColor = (button) => {
+        colorButtons.forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        activeColor = button.dataset.color;
+      };
+
+      colorButtons.forEach((button) => {
+        button.addEventListener("click", () => updateSelectedColor(button));
+      });
+
+      colorParts.forEach((part) => {
+        part.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+          part.style.fill = activeColor;
+        });
+      });
+
+      clearColorsButton.addEventListener("click", () => resetColoring());
+
+      const exportHorseImage = () => {
+        const clone = horseColoring.cloneNode(true);
+        clone.removeAttribute("id");
+        clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        const svgString = new XMLSerializer().serializeToString(clone);
+        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+      };
+
+      const getBounds = () => {
+        const rect = gameArea.getBoundingClientRect();
+        return {
+          width: rect.width,
+          height: rect.height,
+          maxX: Math.max(rect.width - HORSE_SIZE, 0),
+          maxY: Math.max(rect.height - HORSE_SIZE, 0),
+        };
+      };
+
+      const updateHorsePosition = (horse) => {
+        if (!horse.element) return;
+        horse.element.style.left = `${horse.x}px`;
+        horse.element.style.top = `${horse.y}px`;
+      };
+
+      const clearHorseElements = () => {
+        horses.forEach((horse) => {
+          if (horse.element) horse.element.remove();
+        });
+        horses = [];
+      };
+
+      const createHorseElement = (horse) => {
+        const horseEl = document.createElement("div");
+        horseEl.className = "horse";
+        horseEl.innerHTML = `
+          <div class="horse-frame">
+            <img src="${customHorseSrc}" alt="Custom horse ${horse.id}" draggable="false" />
+          </div>
+          <div class="horse-tag">Horse ${horse.id}</div>
+        `;
+
+        horseEl.addEventListener("pointerdown", (event) => {
+          if (horse.inBarn) return;
+          event.preventDefault();
+          const rect = gameArea.getBoundingClientRect();
+          dragHorseId = horse.id;
+          dragPointerId = event.pointerId;
+          dragOffset = {
+            x: event.clientX - rect.left - horse.x,
+            y: event.clientY - rect.top - horse.y,
+          };
+          horseEl.classList.add("dragging");
+          try {
+            horseEl.setPointerCapture(event.pointerId);
+          } catch {
+            // Pointer capture isn't required on all browsers.
+          }
+        });
+
+        gameArea.appendChild(horseEl);
+        horse.element = horseEl;
+        updateHorsePosition(horse);
+      };
+
+      const createHorses = () => {
+        clearHorseElements();
+        const { maxX, maxY } = getBounds();
+
+        for (let i = 0; i < HORSE_COUNT; i += 1) {
+          const horse = {
+            id: i + 1,
+            x: clamp(40 + Math.random() * (maxX * 0.62), 0, maxX),
+            y: clamp(120 + Math.random() * (maxY * 0.72), 0, maxY),
+            vx: randomVelocity(),
+            vy: randomVelocity(),
+            inBarn: false,
+            element: null,
+          };
+          horses.push(horse);
+          createHorseElement(horse);
+        }
+      };
+
+      const isInsideBarn = (x, y) => {
+        const areaRect = gameArea.getBoundingClientRect();
+        const barnRect = barn.getBoundingClientRect();
+        const left = barnRect.left - areaRect.left;
+        const top = barnRect.top - areaRect.top;
+        const right = left + barnRect.width;
+        const bottom = top + barnRect.height;
+
+        const centerX = x + HORSE_SIZE / 2;
+        const centerY = y + HORSE_SIZE / 2;
+
+        return centerX > left && centerX < right && centerY > top && centerY < bottom;
+      };
+
+      const snapIntoBarn = (horse) => {
+        const areaRect = gameArea.getBoundingClientRect();
+        const barnRect = barn.getBoundingClientRect();
+        const barnLeft = barnRect.left - areaRect.left;
+        const barnTop = barnRect.top - areaRect.top;
+        const padding = 14;
+
+        horse.x = barnLeft + padding + Math.random() * Math.max(16, barnRect.width * 0.18);
+        horse.y = barnTop + padding + Math.random() * Math.max(20, barnRect.height * 0.32);
+        horse.vx = 0;
+        horse.vy = 0;
+        horse.inBarn = true;
+        updateHorsePosition(horse);
+      };
+
+      const checkWinState = () => {
+        const won = horses.length > 0 && horses.every((horse) => horse.inBarn);
+        winOverlay.classList.toggle("active", won);
+        if (won) stopLoop();
+      };
+
+      const handleDragMove = (event) => {
+        if (dragHorseId === null) return;
+        const horse = horses.find((item) => item.id === dragHorseId);
+        if (!horse || horse.inBarn) return;
+
+        const rect = gameArea.getBoundingClientRect();
+        const { maxX, maxY } = getBounds();
+        const pointerX = event.clientX - rect.left;
+        const pointerY = event.clientY - rect.top;
+
+        horse.x = clamp(pointerX - dragOffset.x, 0, maxX);
+        horse.y = clamp(pointerY - dragOffset.y, 0, maxY);
+        updateHorsePosition(horse);
+      };
+
+      const handleDragEnd = () => {
+        if (dragHorseId === null) return;
+
+        const horse = horses.find((item) => item.id === dragHorseId);
+        if (horse && !horse.inBarn && isInsideBarn(horse.x, horse.y)) {
+          snapIntoBarn(horse);
+        }
+
+        if (horse && horse.element) {
+          horse.element.classList.remove("dragging");
+          if (dragPointerId !== null) {
+            try {
+              horse.element.releasePointerCapture(dragPointerId);
+            } catch {
+              // Ignore release errors.
+            }
+          }
+        }
+
+        dragHorseId = null;
+        dragPointerId = null;
+        checkWinState();
+      };
+
+      gameArea.addEventListener("pointermove", handleDragMove);
+      gameArea.addEventListener("pointerup", handleDragEnd);
+      gameArea.addEventListener("pointercancel", handleDragEnd);
+
+      const animate = (timestamp) => {
+        if (!lastFrameTime) lastFrameTime = timestamp;
+        const frameFactor = Math.min((timestamp - lastFrameTime) / 16.6, 2.1);
+        lastFrameTime = timestamp;
+
+        const { maxX, maxY } = getBounds();
+
+        horses.forEach((horse) => {
+          if (horse.inBarn || horse.id === dragHorseId) return;
+
+          let nextX = horse.x + horse.vx * frameFactor;
+          let nextY = horse.y + horse.vy * frameFactor;
+
+          if (nextX <= 0 || nextX >= maxX) horse.vx *= -1;
+          if (nextY <= 0 || nextY >= maxY) horse.vy *= -1;
+
+          nextX = clamp(nextX, 0, maxX);
+          nextY = clamp(nextY, 0, maxY);
+          horse.x = nextX;
+          horse.y = nextY;
+          updateHorsePosition(horse);
+        });
+
+        loopHandle = window.requestAnimationFrame(animate);
+      };
+
+      const startLoop = () => {
+        stopLoop();
+        lastFrameTime = 0;
+        loopHandle = window.requestAnimationFrame(animate);
+      };
+
+      const stopLoop = () => {
+        if (loopHandle !== null) {
+          window.cancelAnimationFrame(loopHandle);
+          loopHandle = null;
+        }
+      };
+
+      const resetGame = () => {
+        winOverlay.classList.remove("active");
+        dragHorseId = null;
+        dragPointerId = null;
+        createHorses();
+        startLoop();
+      };
+
+      const startGameWithCustomHorse = () => {
+        previewHorse.src = customHorseSrc;
+        setScene("game");
+        resetGame();
+      };
+
+      submitColorsButton.addEventListener("click", () => {
+        customHorseSrc = exportHorseImage();
+        startGameWithCustomHorse();
+      });
+
+      playAgainButton.addEventListener("click", () => {
+        resetGame();
+      });
+
+      customizeAgainButton.addEventListener("click", () => {
+        stopLoop();
+        clearHorseElements();
+        resetColoring();
+        setScene("color");
+      });
+
+      window.addEventListener("resize", () => {
+        const { maxX, maxY } = getBounds();
+        horses.forEach((horse) => {
+          horse.x = clamp(horse.x, 0, maxX);
+          horse.y = clamp(horse.y, 0, maxY);
+          updateHorsePosition(horse);
+        });
+      });
+
+      resetColoring();
+      setScene("color");
+    </script>
+  </body>
+</html>

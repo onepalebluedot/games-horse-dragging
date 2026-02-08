@@ -1,7 +1,9 @@
 name = "horse-barn-game"
-main = "src/worker.js"
 compatibility_date = "2026-02-08"
 
 [assets]
 directory = "./dist"
-binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+[build]
+command = "npm run build"

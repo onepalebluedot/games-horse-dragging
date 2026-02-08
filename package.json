@@ -1,0 +1,17 @@
+{
+  "name": "horse-barn-game",
+  "version": "1.0.0",
+  "private": true,
+  "description": "iPad-friendly horse coloring and barn herding game deployed on Cloudflare Workers.",
+  "scripts": {
+    "build": "mkdir -p dist && cp index.html dist/index.html",
+    "predev": "npm run build",
+    "dev": "wrangler dev",
+    "check": "npm run build",
+    "predeploy": "npm run build",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
