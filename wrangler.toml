@@ -1,0 +1,7 @@
+name = "horse-barn-game"
+main = "src/worker.js"
+compatibility_date = "2026-02-08"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
